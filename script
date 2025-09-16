@@ -1,0 +1,300 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local TextChatService = game:GetService("TextChatService")
+
+-- Load Rayfield library
+local loadFunc = loadstring or load
+local Rayfield = loadFunc(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/main/source.lua'))()
+
+-- Create Rayfield window
+local Window = Rayfield:CreateWindow({
+    Name = "Q00pkidd Menu Creator Gui: c00lVoid_8",
+    LoadingTitle = "Q00pkidd Menu Version: 0.1",
+    LoadingSubtitle = "By: c00lVoid_8 And Q00pkidd",
+    ConfigurationSaving = {
+        Enabled = false,
+        FolderName = nil,
+        FileName = "Q00pkidd_Config"
+    }
+})
+
+-- Create main tab
+local Tab = Window:CreateTab("Main", nil)
+
+-- Universal chat function (supports old and new chat systems)
+local function chatCmd(msg)
+    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        TextChatService.TextChannels.RBXGeneral:SendAsync(msg)
+    else
+        ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
+    end
+end
+
+-- SyncAPI setup
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+
+player.CharacterAdded:Connect(function(newCharacter)
+    char = newCharacter
+end)
+
+local tool
+for _, v in player:GetDescendants() do
+    if v.Name == "SyncAPI" then
+        tool = v.Parent
+    end
+end
+for _, v in game.ReplicatedStorage:GetDescendants() do
+    if v.Name == "SyncAPI" then
+        tool = v.Parent
+    end
+end
+
+local remote = tool and tool:WaitForChild("SyncAPI").ServerEndpoint
+
+function _(args)
+    if remote then
+        remote:InvokeServer(unpack(args))
+    end
+end
+
+function CreatePart(cf, parent)
+    _( {"CreatePart", "Normal", cf, parent} )
+end
+
+function SetAnchor(part, state)
+    _( {"SyncAnchor", { {["Part"] = part, ["Anchored"] = state} }} )
+end
+
+function AddMesh(part)
+    _( {"CreateMeshes", { {["Part"] = part} }} )
+end
+
+function SetMesh(part, meshid)
+    _( {"SyncMesh", { {["Part"] = part, ["MeshId"] = "rbxassetid://" .. meshid} }} )
+end
+
+function SetTexture(part, texid)
+    _( {"SyncMesh", { {["Part"] = part, ["TextureId"] = "rbxassetid://" .. texid} }} )
+end
+
+function MeshResize(part, size)
+    _( {"SyncMesh", { {["Part"] = part, ["Scale"] = size} }} )
+end
+
+function SetCollision(part, boolean)
+    _( {"SyncCollision", { {["Part"] = part, ["CanCollide"] = boolean} }} )
+end
+
+function DestroyPart(part)
+    _( {"Remove", {part}} )
+end
+
+function MovePart(part, cf)
+    _( {"SyncMove", { {["Part"] = part, ["CFrame"] = cf} }} )
+end
+
+function Resize(part, size, cf)
+    _( {"SyncResize", { {["Part"] = part, ["CFrame"] = cf, ["Size"] = size} }} )
+end
+
+function SetName(part, stringg)
+    _( {"SetName", {part}, stringg} )
+end
+
+function Weld(part1, part2, lead)
+    _( {"CreateWelds", {part1, part2}, lead} )
+end
+
+function SetLocked(part, boolean)
+    _( {"SetLocked", {part}, boolean} )
+end
+
+function SetTrans(part, int)
+    _( {"SyncMaterial", { {["Part"] = part, ["Transparency"] = int} }} )
+end
+
+function CreateSpotlight(part)
+    _( {"CreateLights", { {["Part"] = part, ["LightType"] = "SpotLight"} }} )
+end
+
+function SyncLighting(part, brightness)
+    _( {"SyncLighting", { {["Part"] = part, ["LightType"] = "SpotLight", ["Brightness"] = brightness} }} )
+end
+
+function Color(part, color)
+    _( {"SyncColor", { {["Part"] = part, ["Color"] = color, ["UnionColoring"] = false} }} )
+end
+
+function SpawnDecal(part, side)
+    _( {"CreateTextures", { {["Part"] = part, ["Face"] = side, ["TextureType"] = "Decal"} }} )
+end
+
+function AddDecal(part, asset, side)
+    _( {"SyncTexture", { {["Part"] = part, ["Face"] = side, ["TextureType"] = "Decal", ["Texture"] = "rbxassetid://" .. asset} }} )
+end
+
+-- Function 1: Change Skybox
+local skyboxPart = nil
+
+local function Sky(id)
+    if skyboxPart then
+        DestroyPart(skyboxPart)
+    end
+
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    local cf = hrp.CFrame
+    local offset = Vector3.new(0, hrp.Size.Y + 10, 0) -- Смещение на высоту персонажа + 10 единиц над головой
+    CreatePart(CFrame.new(cf.Position + offset), workspace)
+    wait(0.1) -- Краткая задержка для синхронизации
+    for _, v in workspace:GetDescendants() do
+        if v:IsA("BasePart") and (v.Position - (cf.Position + offset)).Magnitude < 0.1 then
+            skyboxPart = v
+            SetName(v, "Q00pkiddSkybox")
+            SetAnchor(v, true)
+            Resize(v, Vector3.new(1, 1, 1), CFrame.new(cf.Position + offset)) -- Фиксация позиции
+            AddMesh(v)
+            SetMesh(v, "111891702759441")
+            SetTexture(v, id)
+            MeshResize(v, Vector3.new(8000, 8000, 8000))
+            -- Повторное перемещение для исправления
+            MovePart(v, CFrame.new(cf.Position + offset))
+        end
+    end
+end
+
+Tab:CreateButton({
+    Name = "Change Skybox",
+    Callback = function()
+        Sky("139852069575091")
+    end
+})
+
+-- Function 2: Change All Texture
+local function spam(id)
+    for _, v in game.Workspace:GetDescendants() do
+        if v:IsA("BasePart") then
+            spawn(function()
+                SetLocked(v, false)
+                SpawnDecal(v, Enum.NormalId.Front)
+                AddDecal(v, id, Enum.NormalId.Front)
+                SpawnDecal(v, Enum.NormalId.Back)
+                AddDecal(v, id, Enum.NormalId.Back)
+                SpawnDecal(v, Enum.NormalId.Right)
+                AddDecal(v, id, Enum.NormalId.Right)
+                SpawnDecal(v, Enum.NormalId.Left)
+                AddDecal(v, id, Enum.NormalId.Left)
+                SpawnDecal(v, Enum.NormalId.Bottom)
+                AddDecal(v, id, Enum.NormalId.Bottom)
+                SpawnDecal(v, Enum.NormalId.Top)
+                AddDecal(v, id, Enum.NormalId.Top)
+            end)
+        end
+    end
+end
+
+Tab:CreateButton({
+    Name = "Change All Texture",
+    Callback = function()
+        spam("139852069575091")
+    end
+})
+
+-- Function 3: Music
+Tab:CreateButton({
+    Name = "Music",
+    Callback = function()
+        chatCmd(";music 77484784570543 ;pitch 0.09 ;volume 10000")
+    end
+})
+
+-- Function 4: Give Btools
+Tab:CreateButton({
+    Name = "Give Btools",
+    Callback = function()
+        chatCmd(";btools")
+    end
+})
+
+Tab:CreateButton({
+    Name = "LoadMap",
+    Callback = function()
+        chatCmd(";loadmap")
+    end
+})
+
+Tab:CreateButton({
+    Name = "SaveMap",
+    Callback = function()
+        chatCmd(";savemap")
+    end
+})
+
+Tab:CreateButton({
+    Name = "Titler",
+    Callback = function()
+        chatCmd(";titler me Q00Pkidd")
+    end
+})
+
+Tab:CreateButton({
+    Name = "Team",
+    Callback = function()
+        chatCmd(";createteam red Team Q00pkidd Join today!")
+		chatCmd(";createteam blue Team Q00pkidd Join today!")
+		chatCmd(";createteam db Team Q00pkidd Join today!")
+		chatCmd(";createteam Team Q00pkidd Join today!")
+		chatCmd(";createteam dg Team Q00pkidd Join today!")
+		chatCmd(";createteam pk Team Q00pkidd Join today!")
+		chatCmd(";createteam p Team Q00pkidd Join today!")
+		chatCmd(";createteam y Team Q00pkidd Join today!")
+		chatCmd(";createteam o Team Q00pkidd Join today!")
+		chatCmd(";createteam black Team Q00pkidd Join today!")
+		chatCmd(";createteam white Team Q00pkidd Join today!")
+    end
+})
+
+Tab:CreateButton({
+    Name = "Kill all",
+    Callback = function()
+        chatCmd(";kill all")
+    end
+})
+
+Tab:CreateButton({
+    Name = "knife f3x",
+    Callback = function()
+		loadstring(game:HttpGet('https://raw.githubusercontent.com/tim21421423/script-no-my/refs/heads/main/Script'))()
+    end
+})
+
+-- Function 5: Unanchor All
+local function unanchorAll()
+    for _, v in game.Workspace:GetDescendants() do
+        spawn(function()
+            SetLocked(v, false)
+            SetAnchor(v, false)
+        end)
+    end
+end
+
+Tab:CreateButton({
+    Name = "Unanchor All",
+    Callback = function()
+        unanchorAll()
+    end
+})
+
+-- Close menu
+Tab:CreateButton({
+    Name = "Close",
+    Callback = function()
+        if skyboxPart then
+            DestroyPart(skyboxPart)
+            skyboxPart = nil
+        end
+        Window:Destroy()
+    end
+})
